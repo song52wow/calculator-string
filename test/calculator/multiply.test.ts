@@ -1,4 +1,4 @@
-import { Calculator } from '../../src/Calculator'
+import { Calculator } from '../../src/calculator'
 
 describe('int x int ', () => {
   it('2 x 2 = 4', () => {
@@ -28,7 +28,7 @@ describe('int x int ', () => {
 
 describe('int x float ', () => {
   it('2 x 0.2 = 0.4', () => {
-    expect(new Calculator('2').multiply('0.2').result()).toBe(.4')
+    expect(new Calculator('2').multiply('0.2').result()).toBe('0.4')
   })
 
   it('12 x 0.02 = 24', () => {
@@ -101,5 +101,10 @@ describe('float x float ', () => {
 
   it('0.12345678 x 0.123456 = 0.01524148023168', () => {
     expect(new Calculator('0.12345678').multiply('0.123456').result()).toBe('0.01524148023168')
+  })
+
+
+  it('0.000123456780000 x 0.1234560000 = 0.00001524148023168', () => {
+    expect(new Calculator('0.000123456780000').multiply('0.1234560000').result()).toBe('0.00001524148023168')
   })
 })
