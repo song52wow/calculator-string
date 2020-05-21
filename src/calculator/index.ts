@@ -9,8 +9,10 @@ export class Calculator {
   }
 
   /** 去除小数位多余的0 */
-  private removeDecimalExtraZero (val: string) {
-    return val.replace(/([0]*)$/, () => '')
+  private removeDecimalExtraZero () {
+    if (this.num1Arr[1]) {
+      this.num1Arr[1] = this.num1Arr[1].replace(/([0]*)$/, () => '')
+    }
   }
 
   /** 计算小数点位置 */
@@ -24,6 +26,38 @@ export class Calculator {
       this.num1Arr[1] = (this.num1Arr[0].substr(0, num1IntLen).padStart(num2DecimalLength, '0') + (this.num1Arr[1] || ''))
     }
     this.num1Arr[0] = this.num1Arr[0].substr(0, num1IntLen - num2DecimalLength) || '0'
+  }
+
+  /** 分段 */
+  private segment (target: string) {
+    const arr = []
+
+    // 以5个位数长度进行分段
+    for (let i = 0, textLen = 5, frequency = Math.ceil(target.length / textLen); i < frequency; i++) {
+      arr.push(target.substr(i * textLen, textLen))
+    }
+
+    return arr
+  }
+
+  /**
+   * 计算进位数
+   * @param target 需要截取的目标
+   * @param numLen 实际字符长度
+   */
+  private calcCarry (target: string, numLen: number) {
+    return Number.parseInt(target.substr(0, target.length - numLen) || '0')
+  }
+
+  /**
+   * 计算分段小数的实际数值
+   * @param target 要截取的目标
+   * @param numLen 实际字符长度
+   */
+  private calcDecimalSegment (target: string, numLen: number) {
+    const duration = target.length - numLen
+
+    return target.substr(duration > 0 ? duration : 0, numLen).padStart(numLen, '0')
   }
 
   /** 相乘 */
@@ -41,25 +75,15 @@ export class Calculator {
     // 判断是否存在小数位
     if (this.num1Arr[1]) {
       // 基数1小数位分段后的数组
-      const num1ArrDecimalArr = [] as string[]
+      const num1ArrDecimalArr = this.segment(this.num1Arr[1])
 
-      // 把基数1的小数位以5个位数长度进行分段
-      for (let i = 0, textLen = 5, frequency = Math.ceil(this.num1Arr[1].length / textLen); i < frequency; i++) {
-        num1ArrDecimalArr.push(this.num1Arr[1].substr(i * textLen, textLen))
-      }
-
-      for (let i = num1ArrDecimalArr.length - 1, numLen = 0, duration = 0; i >= 0; i--) {
-        // 记录i段的位数长度
-        numLen = num1ArrDecimalArr[i].length
+      for (let i = num1ArrDecimalArr.length - 1, result = ''; i >= 0; i--) {
         // 计算i段
-        num1ArrDecimalArr[i] = (Number.parseInt(num1ArrDecimalArr[i]) * num2Int + carry).toString()
+        result = (Number.parseInt(num1ArrDecimalArr[i]) * num2Int + carry).toString()
         // 记录进位数
-        carry = Number.parseInt(num1ArrDecimalArr[i].substr(0, num1ArrDecimalArr[i].length - numLen) || '0')
-
-        duration = num1ArrDecimalArr[i].length - numLen
-
-        // 根据位数长度重新赋值
-        num1ArrDecimalArr[i] = num1ArrDecimalArr[i].substr(duration > 0 ? duration : 0, numLen).padStart(numLen, '0')
+        carry = this.calcCarry(result, num1ArrDecimalArr[i].length)
+        // 赋值
+        num1ArrDecimalArr[i] = this.calcDecimalSegment(result, num1ArrDecimalArr[i].length)
       }
 
       // 合并小数位
@@ -72,9 +96,7 @@ export class Calculator {
     // 重置小数位
     num2DecimalLength && this.decimalPointPosition(num2DecimalLength)
 
-    if (this.num1Arr[1]) {
-      this.num1Arr[1] = this.removeDecimalExtraZero(this.num1Arr[1])
-    }
+    this.removeDecimalExtraZero()
 
     return this
   }
@@ -96,20 +118,25 @@ export class Calculator {
         this.num1Arr[1] = this.num1Arr[1].padEnd(decimalMaxLen, '0')
         num2Arr[1] = num2Arr[1].padEnd(decimalMaxLen, '0')
 
-        this.num1Arr[1] = (Number.parseFloat(this.num1Arr[1]) + Number.parseFloat(num2Arr[1])).toString()
+        // 分段
+        const num1DecimalSegment = this.segment(this.num1Arr[1])
+        const num2DecimalSegment = this.segment(num2Arr[1])
 
-        const duration = this.num1Arr[1].length - decimalMaxLen
+        // 循环计算
+        for (let i = num1DecimalSegment.length - 1, result = ''; i >= 0; i--) {
+          result = (Number.parseInt(num1DecimalSegment[i]) + Number.parseInt(num2DecimalSegment[i]) + carry).toString()
 
-        if (this.num1Arr[1].length > decimalMaxLen) {
-          carry = Number.parseInt(this.num1Arr[1].substr(0, duration))
+          carry = this.calcCarry(result, num1DecimalSegment[i].length)
+
+          num1DecimalSegment[i] = this.calcDecimalSegment(result, num1DecimalSegment[i].length)
         }
 
-        this.num1Arr[1] = this.num1Arr[1].substr(duration > 0 ? duration : 0, decimalMaxLen).padStart(decimalMaxLen, '0')
+        this.num1Arr[1] = num1DecimalSegment.join('')
       } else {
         this.num1Arr[1] = num2Arr[1]
       }
 
-      this.num1Arr[1] = this.removeDecimalExtraZero(this.num1Arr[1])
+      this.removeDecimalExtraZero()
     }
 
     this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + Number.parseInt(num2Arr[0]) + carry).toString()
@@ -117,7 +144,14 @@ export class Calculator {
     return this
   }
 
+  /** 减去 */
+  // minus (num2: string) {
+  //   const num2Arr = num2.split('.') as INumArr
+  // }
+
   result () {
     return this.num1Arr.join('.')
   }
 }
+
+new Calculator('0.008').plus('0.123').result()
