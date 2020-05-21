@@ -2,6 +2,10 @@ type INumArr = [string, string?]
 
 export class Calculator {
   private num1Arr: INumArr
+  /** 是否为负数 */
+  private isNegative = false
+  /** 进位数 */
+  private carry = 0
 
   constructor (num1: string) {
     // 根据小数点转换出基数1数组
@@ -9,10 +13,13 @@ export class Calculator {
   }
 
   /** 去除小数位多余的0 */
-  private removeDecimalExtraZero () {
+  private initNumber () {
     if (this.num1Arr[1]) {
       this.num1Arr[1] = this.num1Arr[1].replace(/([0]*)$/, () => '')
     }
+
+    // 去除整数部分的负号
+    this.num1Arr[0] = this.num1Arr[0].replace(/^(-)/, () => '')
   }
 
   /** 计算小数点位置 */
@@ -96,8 +103,6 @@ export class Calculator {
     // 重置小数位
     num2DecimalLength && this.decimalPointPosition(num2DecimalLength)
 
-    this.removeDecimalExtraZero()
-
     return this
   }
 
@@ -135,8 +140,6 @@ export class Calculator {
       } else {
         this.num1Arr[1] = num2Arr[1]
       }
-
-      this.removeDecimalExtraZero()
     }
 
     this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + Number.parseInt(num2Arr[0]) + carry).toString()
@@ -144,14 +147,79 @@ export class Calculator {
     return this
   }
 
-  /** 减去 */
-  // minus (num2: string) {
-  //   const num2Arr = num2.split('.') as INumArr
-  // }
+  /** 相减 */
+  minus (num2: string) {
+    let num2Arr = []
+
+    // 如果基数1小于基数2，调换两者位置
+    if (Number.parseFloat(this.result()) < Number.parseFloat(num2)) {
+      num2Arr = this.num1Arr
+      this.num1Arr = num2.split('.') as INumArr
+      this.isNegative = true
+    } else {
+      num2Arr = num2.split('.') as INumArr
+    }
+
+    if (this.num1Arr[1] || num2Arr[1]) {
+      // 获取小数位最大长度
+      const decimalMaxLen = Math.max(this.num1Arr[1]?.length || 0, num2Arr[1]?.length || 0)
+
+      this.num1Arr[1] = (this.num1Arr[1] ? this.num1Arr[1] : '').padEnd(decimalMaxLen, '0')
+      num2Arr[1] = (num2Arr[1] ? num2Arr[1] : '').padEnd(decimalMaxLen, '0')
+
+      // 分段
+      const num1DecimalSegment = this.segment(this.num1Arr[1])
+      const num2DecimalSegment = this.segment(num2Arr[1])
+
+      for (let i = num1DecimalSegment.length - 1, carry = 0, numLen = 0; i >= 0; i--) {
+        carry = 0
+
+        numLen = num1DecimalSegment[i].length
+
+        if (Number.parseInt(num1DecimalSegment[i]) < Number.parseInt(num2DecimalSegment[i])) {
+          num1DecimalSegment[i] = '1' + num1DecimalSegment[i]
+
+          carry = -1
+        }
+
+        num1DecimalSegment[i] = (Number.parseInt(num1DecimalSegment[i]) - Number.parseInt(num2DecimalSegment[i]) + this.carry).toString().padStart(numLen, '0')
+
+        this.carry = carry
+      }
+
+      this.num1Arr[1] = num1DecimalSegment.join('')
+    }
+
+    this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + this.carry - Number.parseInt(num2Arr[0])).toString()
+
+    return this
+  }
+
+  /** 相除 */
+  division (num2: string) {
+    const num2Arr = num2.split('.') as INumArr
+    const num2Int = num2Arr.join('')
+
+    if (num2Arr[1]) {
+      // 记录基数2的小数位
+      const num2ArrDecimalLen = num2Arr[1].length
+
+      // 重置小数点位置
+      this.decimalPointPosition(num2ArrDecimalLen)
+    }
+
+    return this
+  }
 
   result () {
-    return this.num1Arr.join('.')
+    this.initNumber()
+
+    if (this.isNegative) {
+      this.num1Arr[0] = '-' + this.num1Arr[0]
+    }
+
+    return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
   }
 }
 
-new Calculator('0.008').plus('0.123').result()
+new Calculator('12').division('0.02').result()
