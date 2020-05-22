@@ -43,8 +43,8 @@ describe('int / float ', () => {
     expect(new Calculator('1234').division('0.0005').result()).toBe('2468000')
   })
 
-  it('12345 / 0.01006 = 1227137.1769383', () => {
-    expect(new Calculator('12345').division('0.01006').result()).toBe('1227137.1769383')
+  it('12345 / 0.01006 = 1227137.176938369781', () => {
+    expect(new Calculator('12345').division('0.01006').result()).toBe('1227137.17693836978131212724')
   })
 
   it('123456 / 0.12345678 = 999993.6819994819', () => {
@@ -100,7 +100,7 @@ describe('float / float ', () => {
   })
 
   it('0.12345678 / 0.123456 = 0.00000078', () => {
-    expect(new Calculator('0.12345678').division('0.123456').result()).toBe('0.00000078')
+    expect(new Calculator('0.12345678').division('0.123456').result()).toBe('1.00000631804043545879')
   })
 
 

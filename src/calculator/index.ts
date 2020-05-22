@@ -23,16 +23,25 @@ export class Calculator {
   }
 
   /** 计算小数点位置 */
-  private decimalPointPosition (num2DecimalLength: number) {
-    // 基数1整数位长度
-    const num1IntLen = this.num1Arr[0].length
+  private decimalPointPosition (num2DecimalLength: number, before = false) {
+    let fullValue = ''
 
-    if (num1IntLen - num2DecimalLength > 0) {
-      this.num1Arr[1] = (this.num1Arr[0].substr(num1IntLen - num2DecimalLength, num2DecimalLength) + (this.num1Arr[1] || ''))
-    } else {
-      this.num1Arr[1] = (this.num1Arr[0].substr(0, num1IntLen).padStart(num2DecimalLength, '0') + (this.num1Arr[1] || ''))
+    if (!before) { // 小数点往后移
+      // 先补全0
+      fullValue = this.num1Arr[0].padStart(num2DecimalLength, '0')
+
+      this.num1Arr[1] = fullValue.substr(fullValue.length - num2DecimalLength, num2DecimalLength) + (this.num1Arr[1] || '')
+
+      this.num1Arr[0] = fullValue.substr(0, fullValue.length - num2DecimalLength) || '0'
+    } else { // 小数点往前移
+      fullValue = (this.num1Arr[1] || '').padEnd(num2DecimalLength, '0')
+
+      this.num1Arr[0] = this.num1Arr[0] + fullValue.substr(0, num2DecimalLength)
+
+      const regexp = new RegExp(`^([0-9]{${num2DecimalLength}})`)
+
+      this.num1Arr[1] = fullValue.replace(regexp, () => '')
     }
-    this.num1Arr[0] = this.num1Arr[0].substr(0, num1IntLen - num2DecimalLength) || '0'
   }
 
   /** 分段 */
@@ -200,13 +209,46 @@ export class Calculator {
     const num2Arr = num2.split('.') as INumArr
     const num2Int = num2Arr.join('')
 
-    if (num2Arr[1]) {
-      // 记录基数2的小数位
-      const num2ArrDecimalLen = num2Arr[1].length
+    const newNum2Int = num2Int.replace(/^([0]+)/, () => '').replace(/([0]+)$/, () => '')
 
-      // 重置小数点位置
-      this.decimalPointPosition(num2ArrDecimalLen)
+    const decimalPointLength = (num2Arr[1] || '').length - (num2Int.length - newNum2Int.length) + newNum2Int.length
+
+    this.decimalPointPosition(Math.abs(decimalPointLength), decimalPointLength > 0)
+
+    const num1IntSegment = this.segment(this.num1Arr[0])
+
+    let result = ''
+    let carry = ''
+
+    for (let i = 0, initRes = ''; i < num1IntSegment.length; i++) {
+      if (Number.parseInt(carry + num1IntSegment[i]) !== 0) {
+        initRes = (Number.parseInt(carry + num1IntSegment[i]) / Number.parseInt(newNum2Int)).toString()
+      } else {
+        initRes = ''.padStart(num1IntSegment[i].length, '0')
+      }
+
+      if (i !== num1IntSegment.length - 1 || this.num1Arr[1]) {
+        result += initRes.replace(/(.\d+)?$/, () => '')
+      } else {
+        result += initRes
+      }
+
+      carry = (Number.parseInt(num1IntSegment[i]) % Number.parseInt(newNum2Int)).toString()
     }
+
+    if (this.num1Arr[1]) {
+      result = result.replace(/(.\d)?$/, () => '.')
+
+      const num1DecimalSegment = this.segment(this.num1Arr[1])
+
+      for (let i = 0; i < num1DecimalSegment.length; i++) {
+        result += (Number.parseInt(carry + num1DecimalSegment[i]) / Number.parseInt(newNum2Int)).toString()
+
+        carry = (Number.parseInt(num1DecimalSegment[i]) % Number.parseInt(newNum2Int)).toString()
+      }
+    }
+
+    this.num1Arr = result.split('.') as INumArr
 
     return this
   }
@@ -222,4 +264,4 @@ export class Calculator {
   }
 }
 
-new Calculator('12').division('0.02').result()
+new Calculator('12345').division('0.01006').result()
