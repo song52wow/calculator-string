@@ -5,24 +5,24 @@ describe('int / int ', () => {
     expect(new Calculator('2').division('2').result()).toBe('1')
   })
 
-  it('2 / 12 = 0.16666666666666666', () => {
-    expect(new Calculator('2').division('12').result()).toBe('0.16666666666666666')
+  it('2 / 12 = 0.166666666666666666666666666666', () => {
+    expect(new Calculator('2').division('12').result()).toBe('0.166666666666666666666666666666')
   })
 
-  it('2 / 123 = 0.016260162601626018', () => {
-    expect(new Calculator('2').division('123').result()).toBe('0.016260162601626018')
+  it('2 / 123 = 0.016260162601626016260162601626', () => {
+    expect(new Calculator('2').division('123').result()).toBe('0.016260162601626016260162601626')
   })
 
   it('12 / 2 = 6', () => {
     expect(new Calculator('12').division('2').result()).toBe('6')
   })
 
-  it('123 / 23 = 5.3478260869565215', () => {
-    expect(new Calculator('123').division('23').result()).toBe('5.3478260869565215')
+  it('123 / 23 = 5.347826086956521739130434782608', () => {
+    expect(new Calculator('123').division('23').result()).toBe('5.347826086956521739130434782608')
   })
 
-  it('1234 / 134 = 9.208955223880597', () => {
-    expect(new Calculator('1234').division('134').result()).toBe('9.208955223880597')
+  it('1234 / 134 = 9.208955223880597014925373134328', () => {
+    expect(new Calculator('1234').division('134').result()).toBe('9.208955223880597014925373134328')
   })
 })
 
@@ -44,11 +44,11 @@ describe('int / float ', () => {
   })
 
   it('12345 / 0.01006 = 1227137.176938369781', () => {
-    expect(new Calculator('12345').division('0.01006').result()).toBe('1227137.17693836978131212724')
+    expect(new Calculator('12345').division('0.01006').result()).toBe('1227137.176938369781312127236580516898')
   })
 
   it('123456 / 0.12345678 = 999993.6819994819', () => {
-    expect(new Calculator('123456').division('0.12345678').result()).toBe('999993.6819994819')
+    expect(new Calculator('123456').division('0.12345678').result()).toBe('999993.68199948192395751776451645669')
   })
 })
 
