@@ -206,11 +206,11 @@ export class Calculator {
 
   /** 相除 */
   division (num2: string) {
-    const num2Arr = num2.split('.') as INumArr
+    const num2Arr = num2.replace(/(\d+\.\d+?)([0]*)$/, (v1, v2) => v2).split('.') as INumArr
     const num2Int = num2Arr.join('')
 
     // 去除基数2前面的0
-    const newNum2Int = num2Int.replace(/^([0]+)/, () => '').replace(/([0]+)$/, () => '')
+    const newNum2Int = num2Int.replace(/^([0]+)/, () => '')
 
     this.decimalPointPosition((num2Arr[1] || '').length, true)
 
@@ -228,32 +228,33 @@ export class Calculator {
       result = result.replace(/(\.\d+)?$/, () => '')
     }
 
+    // 计算整数位的结果
     for (let i = 0, len = 1; i < len; i++) {
       carry += this.num1Arr[0][i] || '0'
 
       computed()
 
-      if (len < this.num1Arr[0].length || (carry !== '0' && len < this.num1Arr[0].length + 30)) {
+      if (len < this.num1Arr[0].length || (carry !== '0' && len < this.num1Arr[0].length + 30 && !this.num1Arr[1])) {
         len++
       }
     }
-    // }
+
+    if (this.num1Arr[1]) {
+      // 去除小数位
+      for (let i = 0, len = 1; i < len; i++) {
+        carry += this.num1Arr[1][i] || '0'
+
+        computed()
+
+        if (len < this.num1Arr[1].length || (carry !== '0' && len < this.num1Arr[1].length + 30)) {
+          len++
+        }
+      }
+    }
 
     const regexp = new RegExp(`^([0-9]{${this.num1Arr[0].length}})`)
 
     result = result.replace(regexp, (v1) => v1 ? `${v1}.` : v1).replace(/^([0]*)(\d+\.)/, '$2')
-
-    // if (this.num1Arr[1]) {
-    //   result = result.replace(/(.\d)?$/, () => '.')
-
-    //   const num1DecimalSegment = this.segment(this.num1Arr[1])
-
-    //   for (let i = 0; i < num1DecimalSegment.length; i++) {
-    //     result += (Number.parseInt(carry + num1DecimalSegment[i]) / Number.parseInt(newNum2Int)).toString()
-
-    //     carry = (Number.parseInt(num1DecimalSegment[i]) % Number.parseInt(newNum2Int)).toString()
-    //   }
-    // }
 
     this.num1Arr = result.split('.') as INumArr
 
@@ -271,4 +272,4 @@ export class Calculator {
   }
 }
 
-new Calculator('0.2').division('2').result()
+new Calculator('1234').division(Math.pow(10, 18).toString()).result()
