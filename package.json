@@ -1,6 +1,6 @@
 {
   "name": "calculator-string",
-  "version": "0.1.1-alpha.0",
+  "version": "0.1.1-alpha.1",
   "description": "Numerical calculation of String type(String类型的数值计算)",
   "main": "index.js",
   "scripts": {
