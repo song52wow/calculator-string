@@ -1,6 +1,6 @@
 {
-  "name": "number-process",
-  "version": "1.0.0",
+  "name": "calculator-string",
+  "version": "0.1.0",
   "description": "Numerical calculation of String type(String类型的数值计算)",
   "main": "index.js",
   "scripts": {
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/song52wow/number-process.git"
+    "url": "git+https://github.com/song52wow/calculator-string.git"
   },
   "author": "Hari",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/song52wow/number-process/issues"
+    "url": "https://github.com/song52wow/calculator-string/issues"
   },
-  "homepage": "https://github.com/song52wow/number-process#readme",
+  "homepage": "https://github.com/song52wow/calculator-string#readme",
   "devDependencies": {
     "@babel/core": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
