@@ -3,8 +3,9 @@
   "version": "0.3.2",
   "description": "Numerical calculation of String type(String类型的数值计算)",
   "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "test": "jest",
     "publish:preminor": "npm version preminor && npm publish",
     "publish:patch": "npm version patch && npm publish",
