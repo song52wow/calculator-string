@@ -2,7 +2,7 @@
   "name": "calculator-string",
   "version": "0.3.1",
   "description": "Numerical calculation of String type(String类型的数值计算)",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "test": "jest",
@@ -40,7 +40,6 @@
     "typescript": "^3.9.2"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "tag": "latest"
+    "registry": "https://registry.npmjs.org/"
   }
 }
