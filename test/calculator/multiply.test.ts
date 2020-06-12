@@ -24,6 +24,14 @@ describe('int x int ', () => {
   it('1234 x 1234 = 1522756', () => {
     expect(new Calculator('1234').multiply('1234').result()).toBe('1522756')
   })
+
+  it('1234567891 x 9876543219 = 12193263132251181129', () => {
+    expect(new Calculator('1234567891').multiply('9876543219').result()).toBe('12193263132251181129')
+  })
+
+  it('123456 x 12345678 = 1524148023168', () => {
+    expect(new Calculator('123456').multiply('12345678').result()).toBe('1524148023168')
+  })
 })
 
 describe('int x float ', () => {

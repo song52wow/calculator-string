@@ -49,7 +49,7 @@ export class Calculator {
     const arr = []
 
     // 以5个位数长度进行分段
-    for (let i = 0, textLen = 5, frequency = Math.ceil(target.length / textLen); i < frequency; i++) {
+    for (let i = 0, textLen = 2, frequency = Math.ceil(target.length / textLen); i < frequency; i++) {
       arr.push(target.substr(i * textLen, textLen))
     }
 
@@ -85,6 +85,10 @@ export class Calculator {
 
     // 把基数2变为整数
     const num2Int = Number.parseInt(num2Arr.join(''))
+
+    // 把基数2截断
+    const num2IntArr = this.segment(num2Int.toString())
+
     // 进位数
     let carry = 0
 
@@ -106,8 +110,30 @@ export class Calculator {
       this.num1Arr[1] = num1ArrDecimalArr.join('')
     }
 
+    // 整数位分段
+    const num1ArrIntArr = this.segment(this.num1Arr[0])
+
     // 计算整数位
-    this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) * num2Int + carry).toString()
+    for (let i = num1ArrIntArr.length - 1, result = '', resultArr = []; i >= 0; i--) {
+      for (let jLen = num2IntArr.length - 1, j = jLen; j >= 0; j--) {
+        // 计算i段
+        result = (Number.parseInt(num1ArrIntArr[i]) * Number.parseInt(num2IntArr[j]) + carry).toString()
+
+        if (jLen > 0 && j === jLen) {
+          // 赋值
+          resultArr[i] = this.calcDecimalSegment(result, Math.min(num1ArrIntArr[i].length, num2IntArr[j].length))
+
+          // 记录进位数
+          carry = this.calcCarry(result, Math.min(num1ArrIntArr[i].length, num2IntArr[j].length))
+        } else {
+          if (i === 0) {
+            this.num1Arr[0] = result + resultArr.join('')
+          } else {
+            carry = Number.parseInt(result)
+          }
+        }
+      }
+    }
 
     // 重置小数位
     num2DecimalLength && this.decimalPointPosition(num2DecimalLength)
@@ -276,4 +302,4 @@ export class Calculator {
   }
 }
 
-new Calculator('2000123456789123456789').division(Math.pow(10, 18).toString()).result()
+new Calculator('123456').multiply('12345678').result()
