@@ -1,6 +1,11 @@
 type INumArr = [string, string?]
 
 export class Calculator {
+  /** 整数num1 */
+  private num1: string
+  /** 小数位长度 */
+  private decimalLen = 0
+
   private num1Arr: INumArr
   /** 是否为负数 */
   private isNegative = false
@@ -10,6 +15,20 @@ export class Calculator {
   constructor (num1: string) {
     // 根据小数点转换出基数1数组
     this.num1Arr = num1.split('.') as INumArr
+
+    this.decimalLen += this.getDecimalLength(num1)
+
+    this.num1 = num1.split('.').join('')
+  }
+
+  /**
+   * 计算小数位长度
+   * @param num
+   */
+  private getDecimalLength (num: string) {
+    const numArr = num.split('.')
+
+    return numArr[1] ? numArr[1].length : 0
   }
 
   /** 去除小数位多余的0 */
@@ -20,6 +39,18 @@ export class Calculator {
 
     // 去除整数部分的负号
     this.num1Arr[0] = this.num1Arr[0].replace(/^(-)/, () => '')
+  }
+
+  /** 计算小数点位置 */
+  private pointPosition () {
+    if (this.decimalLen === 0) return
+
+    // 补全0
+    const result = this.num1.padStart(this.decimalLen + 1, '0')
+
+    const resultLen = result.length
+
+    this.num1 = result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
   }
 
   /** 计算小数点位置 */
@@ -49,7 +80,7 @@ export class Calculator {
     const arr = []
 
     // 以5个位数长度进行分段
-    for (let i = 0, textLen = 2, frequency = Math.ceil(target.length / textLen); i < frequency; i++) {
+    for (let i = 0, textLen = 5, frequency = Math.ceil(target.length / textLen); i < frequency; i++) {
       arr.push(target.substr(i * textLen, textLen))
     }
 
@@ -78,65 +109,41 @@ export class Calculator {
 
   /** 相乘 */
   multiply (num2: string) {
-    // 根据小数点转换出基数2数组
-    const num2Arr = num2.split('.') as INumArr
-    // 记录基数2的小数位长度，后面计算小数点的位置
-    const num2DecimalLength = num2Arr[1] ? num2Arr[1].length : 0
+    // 叠加小数位长度
+    this.decimalLen += this.getDecimalLength(num2)
 
-    // 把基数2变为整数
-    const num2Int = Number.parseInt(num2Arr.join(''))
+    const num2IntStr = num2.split('.').join('')
 
-    // 把基数2截断
-    const num2IntArr = this.segment(num2Int.toString())
+    const num1Segment = this.segment(this.num1)
+    const num2Segment = this.segment(num2IntStr)
 
-    // 进位数
-    let carry = 0
+    let carry = '0'
 
-    // 判断是否存在小数位
-    if (this.num1Arr[1]) {
-      // 基数1小数位分段后的数组
-      const num1ArrDecimalArr = this.segment(this.num1Arr[1])
+    for (let iLen = num1Segment.length, i = iLen - 1, iResult = ''; i >= 0; i--) {
+      for (let jLen = num2Segment.length, j = jLen - 1, jNumLen = 0, jResultArr = [], jResult = ''; j >= 0; j--) {
+        console.log(jNumLen)
 
-      for (let i = num1ArrDecimalArr.length - 1, result = ''; i >= 0; i--) {
-        // 计算i段
-        result = (Number.parseInt(num1ArrDecimalArr[i]) * num2Int + carry).toString()
-        // 记录进位数
-        carry = this.calcCarry(result, num1ArrDecimalArr[i].length)
-        // 赋值
-        num1ArrDecimalArr[i] = this.calcDecimalSegment(result, num1ArrDecimalArr[i].length)
-      }
+        jResult = (Number.parseInt(num1Segment[i]) * Number.parseInt(num2Segment[j])).toString()
 
-      // 合并小数位
-      this.num1Arr[1] = num1ArrDecimalArr.join('')
-    }
+        jResultArr.unshift(jResult + ''.padEnd(jNumLen, '0'))
 
-    // 整数位分段
-    const num1ArrIntArr = this.segment(this.num1Arr[0])
+        if (j > 0) {
+          jNumLen += num2Segment[j].length
+        }
 
-    // 计算整数位
-    for (let i = num1ArrIntArr.length - 1, result = '', resultArr = []; i >= 0; i--) {
-      for (let jLen = num2IntArr.length - 1, j = jLen; j >= 0; j--) {
-        // 计算i段
-        result = (Number.parseInt(num1ArrIntArr[i]) * Number.parseInt(num2IntArr[j]) + carry).toString()
+        if (j === 0) {
+          jResult = jResultArr.reduce((pre, cur) => (Number.parseInt(pre) + Number.parseInt(cur)).toString(), carry)
 
-        if (jLen > 0 && j === jLen) {
-          // 赋值
-          resultArr[i] = this.calcDecimalSegment(result, Math.min(num1ArrIntArr[i].length, num2IntArr[j].length))
+          iResult = jResult.substr(i > 0 ? jResult.length - num1Segment[i].length : 0) + iResult
 
-          // 记录进位数
-          carry = this.calcCarry(result, Math.min(num1ArrIntArr[i].length, num2IntArr[j].length))
-        } else {
-          if (i === 0) {
-            this.num1Arr[0] = result + resultArr.join('')
-          } else {
-            carry = Number.parseInt(result)
-          }
+          carry = jResult.substr(0, jResult.length - num1Segment[i].length) || '0'
         }
       }
-    }
 
-    // 重置小数位
-    num2DecimalLength && this.decimalPointPosition(num2DecimalLength)
+      if (i === 0) {
+        this.num1 = iResult
+      }
+    }
 
     return this
   }
@@ -292,14 +299,18 @@ export class Calculator {
   }
 
   result () {
-    this.initNumber()
+    // this.initNumber()
 
-    if (this.isNegative) {
-      this.num1Arr[0] = '-' + this.num1Arr[0]
-    }
+    // if (this.isNegative) {
+    //   this.num1Arr[0] = '-' + this.num1Arr[0]
+    // }
 
-    return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
+    // return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
+
+    this.pointPosition()
+
+    return this.num1
   }
 }
 
-new Calculator('123456').multiply('12345678').result()
+new Calculator('2').multiply('0.2').result()
