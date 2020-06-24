@@ -275,5 +275,3 @@ export class Calculator {
     return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
   }
 }
-
-new Calculator('2000123456789123456789').division(Math.pow(10, 18).toString()).result()
