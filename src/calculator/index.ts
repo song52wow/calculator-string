@@ -16,9 +16,9 @@ export class Calculator {
     // 根据小数点转换出基数1数组
     this.num1Arr = num1.split('.') as INumArr
 
-    this.decimalLen += this.getDecimalLength(num1)
+    this.decimalLen = this.getDecimalLength(num1)
 
-    this.num1 = num1.split('.').join('')
+    this.num1 = num1
   }
 
   /**
@@ -42,15 +42,15 @@ export class Calculator {
   }
 
   /** 计算小数点位置 */
-  private pointPosition () {
-    if (this.decimalLen === 0) return
+  private pointPosition (num: string) {
+    if (this.decimalLen === 0) return num
 
     // 补全0
-    const result = this.num1.padStart(this.decimalLen + 1, '0')
+    const result = num.padStart(this.decimalLen + 1, '0')
 
     const resultLen = result.length
 
-    this.num1 = result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
+    return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
   }
 
   /** 计算小数点位置 */
@@ -112,17 +112,16 @@ export class Calculator {
     // 叠加小数位长度
     this.decimalLen += this.getDecimalLength(num2)
 
+    const num1IntStr = this.num1.split('.').join('')
     const num2IntStr = num2.split('.').join('')
 
-    const num1Segment = this.segment(this.num1)
+    const num1Segment = this.segment(num1IntStr)
     const num2Segment = this.segment(num2IntStr)
 
     let carry = '0'
 
     for (let iLen = num1Segment.length, i = iLen - 1, iResult = ''; i >= 0; i--) {
       for (let jLen = num2Segment.length, j = jLen - 1, jNumLen = 0, jResultArr = [], jResult = ''; j >= 0; j--) {
-        console.log(jNumLen)
-
         jResult = (Number.parseInt(num1Segment[i]) * Number.parseInt(num2Segment[j])).toString()
 
         jResultArr.unshift(jResult + ''.padEnd(jNumLen, '0'))
@@ -141,7 +140,7 @@ export class Calculator {
       }
 
       if (i === 0) {
-        this.num1 = iResult
+        this.num1 = this.pointPosition(iResult)
       }
     }
 
@@ -150,91 +149,141 @@ export class Calculator {
 
   /** 相加 */
   plus (num2: string) {
+    // 计算小数位
+    this.decimalLen = Math.max(this.decimalLen, this.getDecimalLength(num2))
+
+    let carry = '0'
+
+    const num1Arr = this.num1.split('.') as INumArr
     const num2Arr = num2.split('.') as INumArr
-    // 进位数
-    let carry = 0
 
-    // 小数位计算
-    if (num2Arr[1]) {
-      // 判断基数1是否存在小数位
-      if (this.num1Arr[1]) {
-        // 获取两个基数中小数位长度最大值
-        const decimalMaxLen = Math.max(this.num1Arr[1].length, num2Arr[1].length)
+    const decimalMaxLen = Math.max((num1Arr[1] || '').length, (num2Arr[1] || '').length)
+    const intMaxLen = Math.max(num1Arr[0].length, num2Arr[0].length)
 
-        // 为两个基数补全0
-        this.num1Arr[1] = this.num1Arr[1].padEnd(decimalMaxLen, '0')
-        num2Arr[1] = num2Arr[1].padEnd(decimalMaxLen, '0')
+    // 补全位长度
+    num1Arr[0] = num1Arr[0].padStart(intMaxLen, '0')
+    num2Arr[0] = num2Arr[0].padStart(intMaxLen, '0')
 
-        // 分段
-        const num1DecimalSegment = this.segment(this.num1Arr[1])
-        const num2DecimalSegment = this.segment(num2Arr[1])
-
-        // 循环计算
-        for (let i = num1DecimalSegment.length - 1, result = ''; i >= 0; i--) {
-          result = (Number.parseInt(num1DecimalSegment[i]) + Number.parseInt(num2DecimalSegment[i]) + carry).toString()
-
-          carry = this.calcCarry(result, num1DecimalSegment[i].length)
-
-          num1DecimalSegment[i] = this.calcDecimalSegment(result, num1DecimalSegment[i].length)
-        }
-
-        this.num1Arr[1] = num1DecimalSegment.join('')
-      } else {
-        this.num1Arr[1] = num2Arr[1]
-      }
+    if (decimalMaxLen) {
+      num1Arr[1] = (num1Arr[1] || '').padEnd(decimalMaxLen, '0')
+      num2Arr[1] = (num2Arr[1] || '').padEnd(decimalMaxLen, '0')
     }
 
-    this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + Number.parseInt(num2Arr[0]) + carry).toString()
+    const num1Segment = this.segment(num1Arr.join(''))
+    const num2Segment = this.segment(num2Arr.join(''))
+
+    for (let len = num1Segment.length, i = len - 1, resultStr = '', resultArr = []; i >= 0; i--) {
+      resultStr = (Number.parseInt(num1Segment[i]) + Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num1Segment[i].length, '0')
+
+      resultArr.unshift(resultStr.substr(resultStr.length - num1Segment[i].length, num1Segment[i].length))
+
+      carry = resultStr.substr(0, resultStr.length - num1Segment[i].length) || '0'
+
+      if (i === 0) {
+        this.num1 = this.pointPosition(resultArr.join(''))
+      }
+    }
 
     return this
   }
 
   /** 相减 */
   minus (num2: string) {
-    let num2Arr = []
+    // 计算小数位
+    this.decimalLen = Math.max(this.decimalLen, this.getDecimalLength(num2))
 
-    // 如果基数1小于基数2，调换两者位置
-    if (Number.parseFloat(this.result()) < Number.parseFloat(num2)) {
-      num2Arr = this.num1Arr
-      this.num1Arr = num2.split('.') as INumArr
-      this.isNegative = true
-    } else {
-      num2Arr = num2.split('.') as INumArr
+    let carry = '0'
+
+    const num1Arr = this.num1.split('.') as INumArr
+    const num2Arr = num2.split('.') as INumArr
+
+    const decimalMaxLen = Math.max((num1Arr[1] || '').length, (num2Arr[1] || '').length)
+    const intMaxLen = Math.max(num1Arr[0].length, num2Arr[0].length)
+
+    // 补全位长度
+    num1Arr[0] = num1Arr[0].padStart(intMaxLen, '0')
+    num2Arr[0] = num2Arr[0].padStart(intMaxLen, '0')
+
+    if (decimalMaxLen) {
+      num1Arr[1] = (num1Arr[1] || '').padEnd(decimalMaxLen, '0')
+      num2Arr[1] = (num2Arr[1] || '').padEnd(decimalMaxLen, '0')
     }
 
-    if (this.num1Arr[1] || num2Arr[1]) {
-      // 获取小数位最大长度
-      const decimalMaxLen = Math.max(this.num1Arr[1] ? this.num1Arr[1].length : 0, num2Arr[1] ? num2Arr[1].length : 0)
+    const num1Segment = this.segment(num1Arr.join(''))
+    const num2Segment = this.segment(num2Arr.join(''))
 
-      this.num1Arr[1] = (this.num1Arr[1] ? this.num1Arr[1] : '').padEnd(decimalMaxLen, '0')
-      num2Arr[1] = (num2Arr[1] ? num2Arr[1] : '').padEnd(decimalMaxLen, '0')
+    for (let len = num1Segment.length, i = len - 1, resultStr = '', resultArr = []; i >= 0; i--) {
+      if (Number.parseInt(num1Segment[i]) < Number.parseInt(num2Segment[i])) {
+        if (Number.parseInt(num1Segment[i]) > 0) {
+          const num1SegmentCopy = num1Segment[i]
 
-      // 分段
-      const num1DecimalSegment = this.segment(this.num1Arr[1])
-      const num2DecimalSegment = this.segment(num2Arr[1])
+          num1Segment[i] = num2Segment[i]
 
-      for (let i = num1DecimalSegment.length - 1, carry = 0, numLen = 0; i >= 0; i--) {
-        carry = 0
+          num2Segment[i] = num1SegmentCopy
+        } else {
+          num1Segment[i] = Math.pow(10, num1Segment[i].length).toString()
 
-        numLen = num1DecimalSegment[i].length
-
-        if (Number.parseInt(num1DecimalSegment[i]) < Number.parseInt(num2DecimalSegment[i])) {
-          num1DecimalSegment[i] = '1' + num1DecimalSegment[i]
-
-          carry = -1
+          carry = '-1'
         }
-
-        num1DecimalSegment[i] = (Number.parseInt(num1DecimalSegment[i]) - Number.parseInt(num2DecimalSegment[i]) + this.carry).toString().padStart(numLen, '0')
-
-        this.carry = carry
       }
 
-      this.num1Arr[1] = num1DecimalSegment.join('')
+      resultStr = (Number.parseInt(num1Segment[i]) - Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num2Segment[i].length, '0')
+
+      resultArr.unshift(resultStr.substr(resultStr.length - num1Segment[i].length, num1Segment[i].length))
+
+      carry = resultStr.substr(0, resultStr.length - num1Segment[i].length) || '0'
+
+      if (i === 0) {
+        this.num1 = this.pointPosition(resultArr.join(''))
+      }
     }
 
-    this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + this.carry - Number.parseInt(num2Arr[0])).toString()
-
     return this
+
+    // let num2Arr = []
+
+    // // 如果基数1小于基数2，调换两者位置
+    // if (Number.parseFloat(this.result()) < Number.parseFloat(num2)) {
+    //   num2Arr = this.num1Arr
+    //   this.num1Arr = num2.split('.') as INumArr
+    //   this.isNegative = true
+    // } else {
+    //   num2Arr = num2.split('.') as INumArr
+    // }
+
+    // if (this.num1Arr[1] || num2Arr[1]) {
+    //   // 获取小数位最大长度
+    //   const decimalMaxLen = Math.max(this.num1Arr[1] ? this.num1Arr[1].length : 0, num2Arr[1] ? num2Arr[1].length : 0)
+
+    //   this.num1Arr[1] = (this.num1Arr[1] ? this.num1Arr[1] : '').padEnd(decimalMaxLen, '0')
+    //   num2Arr[1] = (num2Arr[1] ? num2Arr[1] : '').padEnd(decimalMaxLen, '0')
+
+    //   // 分段
+    //   const num1DecimalSegment = this.segment(this.num1Arr[1])
+    //   const num2DecimalSegment = this.segment(num2Arr[1])
+
+    //   for (let i = num1DecimalSegment.length - 1, carry = 0, numLen = 0; i >= 0; i--) {
+    //     carry = 0
+
+    //     numLen = num1DecimalSegment[i].length
+
+    //     if (Number.parseInt(num1DecimalSegment[i]) < Number.parseInt(num2DecimalSegment[i])) {
+    //       num1DecimalSegment[i] = '1' + num1DecimalSegment[i]
+
+    //       carry = -1
+    //     }
+
+    //     num1DecimalSegment[i] = (Number.parseInt(num1DecimalSegment[i]) - Number.parseInt(num2DecimalSegment[i]) + this.carry).toString().padStart(numLen, '0')
+
+    //     this.carry = carry
+    //   }
+
+    //   this.num1Arr[1] = num1DecimalSegment.join('')
+    // }
+
+    // this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + this.carry - Number.parseInt(num2Arr[0])).toString()
+
+    // return this
   }
 
   /** 相除 */
@@ -276,7 +325,7 @@ export class Calculator {
       }
 
       if (this.num1Arr[1]) {
-      // 去除小数位
+        // 去除小数位
         for (let i = 0, len = 1; i < len; i++) {
           carry += this.num1Arr[1][i] || '0'
 
@@ -307,10 +356,8 @@ export class Calculator {
 
     // return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
 
-    this.pointPosition()
-
     return this.num1
   }
 }
 
-new Calculator('2').multiply('0.2').result()
+new Calculator('1234').plus('0.0005').result()
