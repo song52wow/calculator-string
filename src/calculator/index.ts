@@ -194,8 +194,17 @@ export class Calculator {
 
     let carry = '0'
 
-    const num1Arr = this.num1.split('.') as INumArr
-    const num2Arr = num2.split('.') as INumArr
+    let num1Arr = []
+    let num2Arr = []
+
+    if (Number.parseFloat(this.num1) < Number.parseFloat(num2)) {
+      num1Arr = num2.split('.') as INumArr
+      num2Arr = this.num1.split('.') as INumArr
+      this.isNegative = true
+    } else {
+      num1Arr = this.num1.split('.') as INumArr
+      num2Arr = num2.split('.') as INumArr
+    }
 
     const decimalMaxLen = Math.max((num1Arr[1] || '').length, (num2Arr[1] || '').length)
     const intMaxLen = Math.max(num1Arr[0].length, num2Arr[0].length)
@@ -214,24 +223,20 @@ export class Calculator {
 
     for (let len = num1Segment.length, i = len - 1, resultStr = '', resultArr = []; i >= 0; i--) {
       if (Number.parseInt(num1Segment[i]) < Number.parseInt(num2Segment[i])) {
-        if (Number.parseInt(num1Segment[i]) > 0) {
-          const num1SegmentCopy = num1Segment[i]
+        num1Segment[i] = Math.pow(10, num1Segment[i].length).toString()
 
-          num1Segment[i] = num2Segment[i]
+        resultStr = (Number.parseInt(num1Segment[i]) - Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num2Segment[i].length, '0')
 
-          num2Segment[i] = num1SegmentCopy
-        } else {
-          num1Segment[i] = Math.pow(10, num1Segment[i].length).toString()
+        resultArr.unshift(resultStr.substr(resultStr.length - num2Segment[i].length, num2Segment[i].length))
 
-          carry = '-1'
-        }
+        carry = '-1'
+      } else {
+        resultStr = (Number.parseInt(num1Segment[i]) - Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num2Segment[i].length, '0')
+
+        resultArr.unshift(resultStr.substr(resultStr.length - num1Segment[i].length, num1Segment[i].length))
+
+        carry = resultStr.substr(0, resultStr.length - num1Segment[i].length) || '0'
       }
-
-      resultStr = (Number.parseInt(num1Segment[i]) - Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num2Segment[i].length, '0')
-
-      resultArr.unshift(resultStr.substr(resultStr.length - num1Segment[i].length, num1Segment[i].length))
-
-      carry = resultStr.substr(0, resultStr.length - num1Segment[i].length) || '0'
 
       if (i === 0) {
         this.num1 = this.pointPosition(resultArr.join(''))
@@ -350,9 +355,9 @@ export class Calculator {
   result () {
     // this.initNumber()
 
-    // if (this.isNegative) {
-    //   this.num1Arr[0] = '-' + this.num1Arr[0]
-    // }
+    if (this.isNegative) {
+      this.num1 = '-' + this.num1
+    }
 
     // return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
 
@@ -360,4 +365,4 @@ export class Calculator {
   }
 }
 
-new Calculator('1234').plus('0.0005').result()
+new Calculator('0.01006').minus('0.12345').result()
