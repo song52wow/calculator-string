@@ -50,7 +50,11 @@ export class Calculator {
 
     const resultLen = result.length
 
-    return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
+    if (this.decimalLen > 0) {
+      return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
+    } else {
+      return result.substr(0, Math.abs(this.decimalLen)) + '.' + result.substr(Math.abs(this.decimalLen), resultLen)
+    }
   }
 
   /** 计算小数点位置 */
@@ -223,7 +227,7 @@ export class Calculator {
 
     for (let len = num1Segment.length, i = len - 1, resultStr = '', resultArr = []; i >= 0; i--) {
       if (Number.parseInt(num1Segment[i]) < Number.parseInt(num2Segment[i])) {
-        num1Segment[i] = (Math.pow(10, num1Segment[i].length) + Number.parseInt(num1Segment[i])).toString()
+        num1Segment[i] = '1' + num1Segment[i]
 
         resultStr = (Number.parseInt(num1Segment[i]) - Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num2Segment[i].length, '0')
 
@@ -248,61 +252,106 @@ export class Calculator {
 
   /** 相除 */
   division (num2: string) {
-    const num2Arr = num2.replace(/(\d+\.\d+?)([0]*)$/, (v1, v2) => v2).split('.') as INumArr
-    const num2Int = num2Arr.join('')
+    // 判断基数2为0，直接报NaN
+    if (Number.parseFloat(num2) === 0) {
+      console.error(new Error('Num2 cannot be 0'))
 
-    if (/^1[0]+$/.test(num2)) {
-      this.decimalPointPosition(num2.length - 1)
-    } else {
-      // 去除基数2前面的0
-      const newNum2Int = num2Int.replace(/^([0]+)/, () => '')
-
-      this.decimalPointPosition((num2Arr[1] || '').length, true)
-
-      let [result, carry] = ['', '']
-
-      const computed = () => {
-        if (Number.parseInt(carry) >= Number.parseInt(newNum2Int)) {
-          result += (Number.parseInt(carry) / Number.parseInt(newNum2Int)).toString()
-
-          carry = (Number.parseInt(carry) % Number.parseInt(newNum2Int)).toString()
-        } else {
-          result += '0'
-        }
-
-        result = result.replace(/(\.\d+)?$/, () => '')
-      }
-
-      // 计算整数位的结果
-      for (let i = 0, len = 1; i < len; i++) {
-        carry += this.num1Arr[0][i] || '0'
-
-        computed()
-
-        if (len < this.num1Arr[0].length || (carry !== '0' && len < this.num1Arr[0].length + 30 && !this.num1Arr[1])) {
-          len++
-        }
-      }
-
-      if (this.num1Arr[1]) {
-        // 去除小数位
-        for (let i = 0, len = 1; i < len; i++) {
-          carry += this.num1Arr[1][i] || '0'
-
-          computed()
-
-          if (len < this.num1Arr[1].length || (carry !== '0' && len < this.num1Arr[1].length + 30)) {
-            len++
-          }
-        }
-      }
-
-      const regexp = new RegExp(`^([0-9]{${this.num1Arr[0].length}})`)
-
-      result = result.replace(regexp, (v1) => v1 ? `${v1}.` : v1).replace(/^([0]*)(\d+\.)/, '$2')
-
-      this.num1Arr = result.split('.') as INumArr
+      return this
     }
+
+    const num1Arr = this.num1.split('.') as INumArr
+    const num2Arr = num2.split('.') as INumArr
+
+    // 判断基数1的小数位
+    this.decimalLen = -num1Arr[0].length
+
+    // 记录基数2的小数位长度
+    if (num2Arr[1]) {
+      num2Arr[1] = num2Arr[1].replace(/[0]*$/, () => '')
+
+      this.decimalLen += num2Arr[1].length
+    }
+
+    const num1Int = num1Arr.join('')
+    const num2Int = num2Arr.join('').replace(/^[0]*/, () => '')
+
+    // 最大计算次数
+    const maxComputedLen = 30
+
+    let result = ''
+
+    for (let i = 0, len = 1, carry = ''; i < len; i++) {
+      carry += num1Int[i] || '0'
+
+      if (Number.parseInt(carry) >= Number.parseInt(num2Int)) {
+        result += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()
+
+        carry = (Number.parseInt(carry) % Number.parseInt(num2Int)).toString()
+      } else {
+        result += '0'
+      }
+
+      result = result.replace(/(\.\d+)?$/, () => '')
+
+      if (i < num1Int.length || (Number.parseInt(carry) !== 0 && len < num1Int.length + maxComputedLen)) {
+        len++
+      }
+    }
+
+    this.num1 = this.pointPosition(result).replace(/^([0]*)([0-9]+\.)(.*)/, '$2$3')
+
+    // if (/^1[0]+$/.test(num2)) {
+    //   this.pointPosition(num2.length - 1)
+    // } else {
+    // 去除基数2前面的0
+    // const newNum2Int = num2Int.replace(/^([0]+)/, () => '')
+
+    // this.decimalPointPosition((num2Arr[1] || '').length, true)
+
+    // let [result, carry] = ['', '']
+
+    // const computed = () => {
+    //   if (Number.parseInt(carry) >= Number.parseInt(newNum2Int)) {
+    //     result += (Number.parseInt(carry) / Number.parseInt(newNum2Int)).toString()
+
+    //     carry = (Number.parseInt(carry) % Number.parseInt(newNum2Int)).toString()
+    //   } else {
+    //     result += '0'
+    //   }
+
+    //   result = result.replace(/(\.\d+)?$/, () => '')
+    // }
+
+    // // 计算整数位的结果
+    // for (let i = 0, len = 1; i < len; i++) {
+    //   carry += this.num1Arr[0][i] || '0'
+
+    //   computed()
+
+    //   if (len < this.num1Arr[0].length || (carry !== '0' && len < this.num1Arr[0].length + 30 && !this.num1Arr[1])) {
+    //     len++
+    //   }
+    // }
+
+    // if (this.num1Arr[1]) {
+    //   // 去除小数位
+    //   for (let i = 0, len = 1; i < len; i++) {
+    //     carry += this.num1Arr[1][i] || '0'
+
+    //     computed()
+
+    //     if (len < this.num1Arr[1].length || (carry !== '0' && len < this.num1Arr[1].length + 30)) {
+    //       len++
+    //     }
+    //   }
+    // }
+
+    // const regexp = new RegExp(`^([0-9]{${this.num1Arr[0].length}})`)
+
+    // result = result.replace(regexp, (v1) => v1 ? `${v1}.` : v1).replace(/^([0]*)(\d+\.)/, '$2')
+
+    // this.num1Arr = result.split('.') as INumArr
+    // }
 
     return this
   }
@@ -314,10 +363,8 @@ export class Calculator {
       this.num1 = '-' + this.num1
     }
 
-    // return this.num1Arr[1] ? this.num1Arr.join('.') : this.num1Arr[0]
-
     return this.num1
   }
 }
 
-new Calculator('0.01006').minus('0.12345').result()
+new Calculator('1234').division('0.0005').result()
