@@ -223,7 +223,7 @@ export class Calculator {
 
     for (let len = num1Segment.length, i = len - 1, resultStr = '', resultArr = []; i >= 0; i--) {
       if (Number.parseInt(num1Segment[i]) < Number.parseInt(num2Segment[i])) {
-        num1Segment[i] = Math.pow(10, num1Segment[i].length).toString()
+        num1Segment[i] = (Math.pow(10, num1Segment[i].length) + Number.parseInt(num1Segment[i])).toString()
 
         resultStr = (Number.parseInt(num1Segment[i]) - Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num2Segment[i].length, '0')
 
@@ -244,51 +244,6 @@ export class Calculator {
     }
 
     return this
-
-    // let num2Arr = []
-
-    // // 如果基数1小于基数2，调换两者位置
-    // if (Number.parseFloat(this.result()) < Number.parseFloat(num2)) {
-    //   num2Arr = this.num1Arr
-    //   this.num1Arr = num2.split('.') as INumArr
-    //   this.isNegative = true
-    // } else {
-    //   num2Arr = num2.split('.') as INumArr
-    // }
-
-    // if (this.num1Arr[1] || num2Arr[1]) {
-    //   // 获取小数位最大长度
-    //   const decimalMaxLen = Math.max(this.num1Arr[1] ? this.num1Arr[1].length : 0, num2Arr[1] ? num2Arr[1].length : 0)
-
-    //   this.num1Arr[1] = (this.num1Arr[1] ? this.num1Arr[1] : '').padEnd(decimalMaxLen, '0')
-    //   num2Arr[1] = (num2Arr[1] ? num2Arr[1] : '').padEnd(decimalMaxLen, '0')
-
-    //   // 分段
-    //   const num1DecimalSegment = this.segment(this.num1Arr[1])
-    //   const num2DecimalSegment = this.segment(num2Arr[1])
-
-    //   for (let i = num1DecimalSegment.length - 1, carry = 0, numLen = 0; i >= 0; i--) {
-    //     carry = 0
-
-    //     numLen = num1DecimalSegment[i].length
-
-    //     if (Number.parseInt(num1DecimalSegment[i]) < Number.parseInt(num2DecimalSegment[i])) {
-    //       num1DecimalSegment[i] = '1' + num1DecimalSegment[i]
-
-    //       carry = -1
-    //     }
-
-    //     num1DecimalSegment[i] = (Number.parseInt(num1DecimalSegment[i]) - Number.parseInt(num2DecimalSegment[i]) + this.carry).toString().padStart(numLen, '0')
-
-    //     this.carry = carry
-    //   }
-
-    //   this.num1Arr[1] = num1DecimalSegment.join('')
-    // }
-
-    // this.num1Arr[0] = (Number.parseInt(this.num1Arr[0]) + this.carry - Number.parseInt(num2Arr[0])).toString()
-
-    // return this
   }
 
   /** 相除 */
