@@ -42,18 +42,28 @@ export class Calculator {
   }
 
   /** 计算小数点位置 */
-  private pointPosition (num: string) {
+  private pointPosition (num: string): string {
     if (this.decimalLen === 0) return num
 
-    // 补全0
-    const result = num.padStart(this.decimalLen + 1, '0')
-
-    const resultLen = result.length
+    let result = ''
 
     if (this.decimalLen > 0) {
+      // 补全0
+      result = num.padStart(this.decimalLen + 1, '0')
+
+      const resultLen = result.length
+
       return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
     } else {
-      return result.substr(0, Math.abs(this.decimalLen)) + '.' + result.substr(Math.abs(this.decimalLen), resultLen)
+      const numArr = num.split('.')
+
+      numArr[1] = (numArr[1] || '').padEnd(Math.abs(this.decimalLen), '0')
+
+      const numDecimalLength = numArr[1].length
+
+      this.decimalLen += numDecimalLength
+
+      return this.pointPosition(numArr.join('.'))
     }
   }
 
@@ -259,20 +269,25 @@ export class Calculator {
       return this
     }
 
-    const num1Arr = this.num1.split('.') as INumArr
     const num2Arr = num2.split('.') as INumArr
-
-    // 判断基数1的小数位
-    this.decimalLen = -num1Arr[0].length
 
     // 记录基数2的小数位长度
     if (num2Arr[1]) {
-      num2Arr[1] = num2Arr[1].replace(/[0]*$/, () => '')
+      // 移除小数位
+      this.decimalLen = -num2Arr[1].length
 
-      this.decimalLen += num2Arr[1].length
+      this.num1 = this.pointPosition(this.num1)
+
+      this.decimalLen = 0
     }
 
-    const num1Int = num1Arr.join('')
+    const num1Arr = this.num1.split('.')
+
+    // if (num1Arr[1]) {
+    //   this.decimalLen = -num1Arr[1].length
+    // }
+
+    const num1Int = num1Arr.join('').replace(/^[0]*/, () => '')
     const num2Int = num2Arr.join('').replace(/^[0]*/, () => '')
 
     // 最大计算次数
@@ -293,65 +308,14 @@ export class Calculator {
 
       result = result.replace(/(\.\d+)?$/, () => '')
 
-      if (i < num1Int.length || (Number.parseInt(carry) !== 0 && len < num1Int.length + maxComputedLen)) {
+      if (i < num1Int.length - 1 || (Number.parseInt(carry) !== 0 && len < num1Int.length + maxComputedLen)) {
         len++
       }
     }
 
-    this.num1 = this.pointPosition(result).replace(/^([0]*)([0-9]+\.)(.*)/, '$2$3')
+    this.decimalLen += result.length - num1Int.length
 
-    // if (/^1[0]+$/.test(num2)) {
-    //   this.pointPosition(num2.length - 1)
-    // } else {
-    // 去除基数2前面的0
-    // const newNum2Int = num2Int.replace(/^([0]+)/, () => '')
-
-    // this.decimalPointPosition((num2Arr[1] || '').length, true)
-
-    // let [result, carry] = ['', '']
-
-    // const computed = () => {
-    //   if (Number.parseInt(carry) >= Number.parseInt(newNum2Int)) {
-    //     result += (Number.parseInt(carry) / Number.parseInt(newNum2Int)).toString()
-
-    //     carry = (Number.parseInt(carry) % Number.parseInt(newNum2Int)).toString()
-    //   } else {
-    //     result += '0'
-    //   }
-
-    //   result = result.replace(/(\.\d+)?$/, () => '')
-    // }
-
-    // // 计算整数位的结果
-    // for (let i = 0, len = 1; i < len; i++) {
-    //   carry += this.num1Arr[0][i] || '0'
-
-    //   computed()
-
-    //   if (len < this.num1Arr[0].length || (carry !== '0' && len < this.num1Arr[0].length + 30 && !this.num1Arr[1])) {
-    //     len++
-    //   }
-    // }
-
-    // if (this.num1Arr[1]) {
-    //   // 去除小数位
-    //   for (let i = 0, len = 1; i < len; i++) {
-    //     carry += this.num1Arr[1][i] || '0'
-
-    //     computed()
-
-    //     if (len < this.num1Arr[1].length || (carry !== '0' && len < this.num1Arr[1].length + 30)) {
-    //       len++
-    //     }
-    //   }
-    // }
-
-    // const regexp = new RegExp(`^([0-9]{${this.num1Arr[0].length}})`)
-
-    // result = result.replace(regexp, (v1) => v1 ? `${v1}.` : v1).replace(/^([0]*)(\d+\.)/, '$2')
-
-    // this.num1Arr = result.split('.') as INumArr
-    // }
+    this.num1 = this.pointPosition(result).replace(/^([0]*)([0-9]+\.?)([0-9]*)/, '$2$3')
 
     return this
   }
@@ -367,4 +331,4 @@ export class Calculator {
   }
 }
 
-new Calculator('1234').division('0.0005').result()
+new Calculator('0.12345678').division('0.123456').result()
