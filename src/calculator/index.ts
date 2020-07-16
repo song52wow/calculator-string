@@ -63,7 +63,7 @@ export class Calculator {
 
       this.decimalLen += numDecimalLength
 
-      return this.pointPosition(numArr.join('.'))
+      return this.pointPosition(numArr.join(''))
     }
   }
 
@@ -293,29 +293,53 @@ export class Calculator {
     // 最大计算次数
     const maxComputedLen = 30
 
-    let result = ''
+    const resultArr = [''] as string[]
 
-    for (let i = 0, len = 1, carry = ''; i < len; i++) {
-      carry += num1Int[i] || '0'
+    for (let i = 0, len = num1Arr[0].length, carry = ''; i < len; i++) {
+      carry += num1Arr[0][i] || '0'
 
       if (Number.parseInt(carry) >= Number.parseInt(num2Int)) {
-        result += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()
+        resultArr[0] += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()[0]
 
         carry = (Number.parseInt(carry) % Number.parseInt(num2Int)).toString()
       } else {
-        result += '0'
+        resultArr[0] += '0'
       }
 
-      result = result.replace(/(\.\d+)?$/, () => '')
+      // resultArr[0] = resultArr[0].replace(/(\.\d+)?$/, () => '')
 
-      if (i < num1Int.length - 1 || (Number.parseInt(carry) !== 0 && len < num1Int.length + maxComputedLen)) {
-        len++
+      // if (i < num1Int.length - 1 || (Number.parseInt(carry) !== 0 && len < num1Int.length + maxComputedLen)) {
+      //   len++
+      // }
+    }
+
+    resultArr[0] = resultArr[0].replace(/^[0]*([0-9]+)/, '$1')
+
+    if (num1Arr[1]) {
+      resultArr[1] = ''
+
+      for (let i = 0, len = num1Arr[0].length, carry = ''; i < len; i++) {
+        carry += num1Arr[1][i] || '0'
+
+        if (Number.parseInt(carry) >= Number.parseInt(num2Int)) {
+          resultArr[1] += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()[0]
+
+          carry = (Number.parseInt(carry) % Number.parseInt(num2Int)).toString()
+        } else {
+          resultArr[1] += '0'
+        }
+
+        if (i === len - 1 && (Number.parseInt(carry) !== 0 && len < num1Arr[1].length + maxComputedLen)) {
+          len++
+        }
       }
     }
 
-    this.decimalLen += result.length - num1Int.length
+    // this.decimalLen += result.length - num1Int.length
 
-    this.num1 = this.pointPosition(result).replace(/^([0]*)([0-9]+\.?)([0-9]*)/, '$2$3')
+    // this.num1 = this.pointPosition(result).replace(/^([0]*)([0-9]+\.?)([0-9]*)/, '$2$3')
+
+    this.num1 = resultArr.join('.')
 
     return this
   }
@@ -331,4 +355,5 @@ export class Calculator {
   }
 }
 
+// 1.00000631804043545878693623639191
 new Calculator('0.12345678').division('0.123456').result()
