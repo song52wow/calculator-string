@@ -306,19 +306,17 @@ export class Calculator {
         resultArr[0] += '0'
       }
 
-      // resultArr[0] = resultArr[0].replace(/(\.\d+)?$/, () => '')
-
-      // if (i < num1Int.length - 1 || (Number.parseInt(carry) !== 0 && len < num1Int.length + maxComputedLen)) {
-      //   len++
-      // }
+      if (i >= num1Arr[0].length - 1 && Number.parseInt(carry) !== 0 && len < num1Arr[0].length + maxComputedLen && !this.num1Arr[1]) {
+        len++
+      }
     }
 
-    resultArr[0] = resultArr[0].replace(/^[0]*([0-9]+)/, '$1')
+    // resultArr[0] = resultArr[0].replace(/^[0]*([0-9]+)/, '$1')
 
     if (num1Arr[1]) {
       resultArr[1] = ''
 
-      for (let i = 0, len = num1Arr[0].length, carry = ''; i < len; i++) {
+      for (let i = 0, len = num1Arr[1].length, carry = ''; i < len; i++) {
         carry += num1Arr[1][i] || '0'
 
         if (Number.parseInt(carry) >= Number.parseInt(num2Int)) {
@@ -329,7 +327,7 @@ export class Calculator {
           resultArr[1] += '0'
         }
 
-        if (i === len - 1 && (Number.parseInt(carry) !== 0 && len < num1Arr[1].length + maxComputedLen)) {
+        if (i >= num1Arr[1].length - 1 && Number.parseInt(carry) !== 0 && len < num1Arr[1].length + maxComputedLen) {
           len++
         }
       }
@@ -355,5 +353,5 @@ export class Calculator {
   }
 }
 
-// 1.00000631804043545878693623639191
-new Calculator('0.12345678').division('0.123456').result()
+// 999993.68199948192395751776451645669
+new Calculator('0.01006').division('0.12345').result()
