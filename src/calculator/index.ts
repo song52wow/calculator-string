@@ -45,18 +45,24 @@ export class Calculator {
   private pointPosition (num: string): string {
     if (this.decimalLen === 0) return num
 
-    let result = ''
+    const result = ''
+
+    const numArr = num.split('.')
 
     if (this.decimalLen > 0) {
       // 补全0
-      result = num.padStart(this.decimalLen + 1, '0')
+      numArr[0] = numArr[0].padStart(this.decimalLen + 1, '0')
 
-      const resultLen = result.length
+      // const resultLen = result.length
 
-      return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
+      numArr[1] = (numArr[0].substr(numArr[0].length - this.decimalLen) + (numArr[1] || '')).replace(/[0]*$/, '')
+
+      numArr[0] = numArr[0].substr(0, numArr[0].length - this.decimalLen)
+
+      return numArr.join('.')
+
+      // return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
     } else {
-      const numArr = num.split('.')
-
       numArr[1] = (numArr[1] || '').padEnd(Math.abs(this.decimalLen), '0')
 
       const numDecimalLength = numArr[1].length
@@ -269,82 +275,84 @@ export class Calculator {
       return this
     }
 
-    const num2Arr = num2.split('.') as INumArr
-
-    // 记录基数2的小数位长度
-    if (num2Arr[1]) {
-      // 移除小数位
-      this.decimalLen = -num2Arr[1].length
+    if (/^1[0]+$/.test(num2)) {
+      this.decimalLen = num2.length - 1
 
       this.num1 = this.pointPosition(this.num1)
+    } else {
+      const num2Arr = num2.split('.') as INumArr
 
-      this.decimalLen = 0
-    }
+      // 记录基数2的小数位长度
+      if (num2Arr[1]) {
+      // 移除小数位
+        this.decimalLen = -num2Arr[1].length
 
-    const num1Arr = this.num1.split('.')
+        this.num1 = this.pointPosition(this.num1)
 
-    // if (num1Arr[1]) {
-    //   this.decimalLen = -num1Arr[1].length
-    // }
-
-    const num1Int = num1Arr.join('').replace(/^[0]*/, () => '')
-    const num2Int = num2Arr.join('').replace(/^[0]*/, () => '')
-
-    // 最大计算次数
-    const maxComputedLen = 30
-
-    const resultArr = [''] as string[]
-
-    for (let i = 0, len = num1Arr[0].length, carry = ''; i < len; i++) {
-      carry += num1Arr[0][i] || '0'
-
-      if (Number.parseInt(carry) >= Number.parseInt(num2Int)) {
-        resultArr[0] += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()[0]
-
-        carry = (Number.parseInt(carry) % Number.parseInt(num2Int)).toString()
-      } else {
-        resultArr[0] += '0'
+        this.decimalLen = 0
       }
 
-      if (i >= num1Arr[0].length - 1 && Number.parseInt(carry) !== 0 && len < num1Arr[0].length + maxComputedLen && !this.num1Arr[1]) {
-        len++
-      }
-    }
+      const num1Arr = this.num1.split('.')
 
-    // resultArr[0] = resultArr[0].replace(/^[0]*([0-9]+)/, '$1')
+      const num2Int = num2Arr.join('').replace(/^[0]*/, () => '')
 
-    if (num1Arr[1]) {
-      resultArr[1] = ''
+      // 最大计算次数
+      const maxComputedLen = 30
 
-      for (let i = 0, len = num1Arr[1].length, carry = ''; i < len; i++) {
-        carry += num1Arr[1][i] || '0'
+      const resultArr = [''] as string[]
 
+      let carry = ''
+
+      const computed = (i: 0|1) => {
         if (Number.parseInt(carry) >= Number.parseInt(num2Int)) {
-          resultArr[1] += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()[0]
+          resultArr[i] += (Number.parseInt(carry) / Number.parseInt(num2Int)).toString()
 
           carry = (Number.parseInt(carry) % Number.parseInt(num2Int)).toString()
         } else {
-          resultArr[1] += '0'
+          resultArr[i] += '0'
         }
 
-        if (i >= num1Arr[1].length - 1 && Number.parseInt(carry) !== 0 && len < num1Arr[1].length + maxComputedLen) {
+        resultArr[i] = resultArr[i].replace(/(\.\d+)?$/, () => '')
+      }
+
+      // 计算整数位的结果
+      for (let i = 0, len = 1; i < len; i++) {
+        carry += num1Arr[0][i] || '0'
+
+        computed(0)
+
+        if (len < num1Arr[0].length || (carry !== '0' && len < num1Arr[0].length + maxComputedLen && !num1Arr[1])) {
           len++
         }
       }
+
+      if (num1Arr[1]) {
+        resultArr[1] = ''
+
+        // 去除小数位
+        for (let i = 0, len = 1; i < len; i++) {
+          carry += num1Arr[1][i] || '0'
+
+          computed(1)
+
+          if (len < num1Arr[1].length || (carry !== '0' && len < num1Arr[1].length + maxComputedLen)) {
+            len++
+          }
+        }
+      } else {
+        const decimal = resultArr[0].substr(num1Arr[0].length).replace(/[0]*$/, '')
+        if (decimal) {
+          resultArr[1] = decimal
+        }
+        resultArr[0] = resultArr[0].substr(0, num1Arr[0].length)
+      }
+
+      this.num1 = resultArr.join('.').replace(/^[0]*([0-9]+)/, '$1')
     }
-
-    // this.decimalLen += result.length - num1Int.length
-
-    // this.num1 = this.pointPosition(result).replace(/^([0]*)([0-9]+\.?)([0-9]*)/, '$2$3')
-
-    this.num1 = resultArr.join('.')
-
     return this
   }
 
   result () {
-    // this.initNumber()
-
     if (this.isNegative) {
       this.num1 = '-' + this.num1
     }
@@ -354,4 +362,4 @@ export class Calculator {
 }
 
 // 999993.68199948192395751776451645669
-new Calculator('0.01006').division('0.12345').result()
+new Calculator('10.10').division('100').result()
