@@ -80,11 +80,11 @@ describe('float - int ', () => {
 
 describe('float - float ', () => {
   it('0.2 - 0.2 = 0', () => {
-    expect(new Calculator('0.2').minus('0.2').result()).toBe('0.0')
+    expect(new Calculator('0.2').minus('0.2').result()).toBe('0')
   })
 
   it('0.02 - 0.12 = -0.1', () => {
-    expect(new Calculator('0.02').minus('0.12').result()).toBe('-0.10')
+    expect(new Calculator('0.02').minus('0.12').result()).toBe('-0.1')
   })
 
   it('0.008 - 0.123 = -0.115', () => {
@@ -105,7 +105,7 @@ describe('float - float ', () => {
 
 
   it('0.000123456780000 - 0.1234560000 = -0.12333254322', () => {
-    expect(new Calculator('0.000123456780000').minus('0.1234560000').result()).toBe('-0.123332543220000')
+    expect(new Calculator('0.000123456780000').minus('0.1234560000').result()).toBe('-0.12333254322')
   })
   
   it('0.000000000000001234 - 0.000000000056543456 = -0.000000000056542222', () => {

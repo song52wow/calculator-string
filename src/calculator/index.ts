@@ -5,17 +5,10 @@ export class Calculator {
   private num1: string
   /** 小数位长度 */
   private decimalLen = 0
-
-  private num1Arr: INumArr
   /** 是否为负数 */
   private isNegative = false
-  /** 进位数 */
-  private carry = 0
 
   constructor (num1: string) {
-    // 根据小数点转换出基数1数组
-    this.num1Arr = num1.split('.') as INumArr
-
     this.decimalLen = this.getDecimalLength(num1)
 
     this.num1 = num1
@@ -31,21 +24,9 @@ export class Calculator {
     return numArr[1] ? numArr[1].length : 0
   }
 
-  /** 去除小数位多余的0 */
-  private initNumber () {
-    if (this.num1Arr[1]) {
-      this.num1Arr[1] = this.num1Arr[1].replace(/([0]*)$/, () => '')
-    }
-
-    // 去除整数部分的负号
-    this.num1Arr[0] = this.num1Arr[0].replace(/^(-)/, () => '')
-  }
-
   /** 计算小数点位置 */
   private pointPosition (num: string): string {
     if (this.decimalLen === 0) return num
-
-    const result = ''
 
     const numArr = num.split('.')
 
@@ -53,15 +34,15 @@ export class Calculator {
       // 补全0
       numArr[0] = numArr[0].padStart(this.decimalLen + 1, '0')
 
-      // const resultLen = result.length
+      const decimal = (numArr[0].substr(numArr[0].length - this.decimalLen) + (numArr[1] || '')).replace(/[0]*$/, '')
 
-      numArr[1] = (numArr[0].substr(numArr[0].length - this.decimalLen) + (numArr[1] || '')).replace(/[0]*$/, '')
+      if (decimal) {
+        numArr[1] = decimal
+      }
 
       numArr[0] = numArr[0].substr(0, numArr[0].length - this.decimalLen)
 
       return numArr.join('.')
-
-      // return result.substr(0, resultLen - this.decimalLen) + '.' + result.substr(resultLen - this.decimalLen, resultLen)
     } else {
       numArr[1] = (numArr[1] || '').padEnd(Math.abs(this.decimalLen), '0')
 
@@ -70,28 +51,6 @@ export class Calculator {
       this.decimalLen += numDecimalLength
 
       return this.pointPosition(numArr.join(''))
-    }
-  }
-
-  /** 计算小数点位置 */
-  private decimalPointPosition (num2DecimalLength: number, before = false) {
-    let fullValue = ''
-
-    if (!before) { // 小数点往后移
-      // 先补全0
-      fullValue = this.num1Arr[0].padStart(num2DecimalLength, '0')
-
-      this.num1Arr[1] = fullValue.substr(fullValue.length - num2DecimalLength, num2DecimalLength) + (this.num1Arr[1] || '')
-
-      this.num1Arr[0] = fullValue.substr(0, fullValue.length - num2DecimalLength) || '0'
-    } else { // 小数点往前移
-      fullValue = (this.num1Arr[1] || '').padEnd(num2DecimalLength, '0')
-
-      this.num1Arr[0] = this.num1Arr[0] + fullValue.substr(0, num2DecimalLength)
-
-      const regexp = new RegExp(`^([0-9]{${num2DecimalLength}})`)
-
-      this.num1Arr[1] = fullValue.replace(regexp, () => '')
     }
   }
 
@@ -105,26 +64,6 @@ export class Calculator {
     }
 
     return arr
-  }
-
-  /**
-   * 计算进位数
-   * @param target 需要截取的目标
-   * @param numLen 实际字符长度
-   */
-  private calcCarry (target: string, numLen: number) {
-    return Number.parseInt(target.substr(0, target.length - numLen) || '0')
-  }
-
-  /**
-   * 计算分段小数的实际数值
-   * @param target 要截取的目标
-   * @param numLen 实际字符长度
-   */
-  private calcDecimalSegment (target: string, numLen: number) {
-    const duration = target.length - numLen
-
-    return target.substr(duration > 0 ? duration : 0, numLen).padStart(numLen, '0')
   }
 
   /** 相乘 */
@@ -362,4 +301,4 @@ export class Calculator {
 }
 
 // 999993.68199948192395751776451645669
-new Calculator('10.10').division('100').result()
+new Calculator('0.2').minus('0.2').result()
