@@ -134,13 +134,15 @@ export class Calculator {
     for (let len = num1Segment.length, i = len - 1, resultStr = '', resultArr = []; i >= 0; i--) {
       resultStr = (Number.parseInt(num1Segment[i]) + Number.parseInt(num2Segment[i]) + Number.parseInt(carry)).toString().padStart(num1Segment[i].length, '0')
 
-      resultArr.unshift(resultStr.substr(resultStr.length - num1Segment[i].length, num1Segment[i].length))
+      if (i === 0) {
+        resultArr.unshift(resultStr)
+
+        this.num1 = this.pointPosition(resultArr.join(''))
+      } else {
+        resultArr.unshift(resultStr.substr(resultStr.length - num1Segment[i].length, num1Segment[i].length))
+      }
 
       carry = resultStr.substr(0, resultStr.length - num1Segment[i].length) || '0'
-
-      if (i === 0) {
-        this.num1 = this.pointPosition(resultArr.join(''))
-      }
     }
 
     return this
@@ -301,4 +303,4 @@ export class Calculator {
 }
 
 // 999993.68199948192395751776451645669
-new Calculator('0.2').minus('0.2').result()
+new Calculator('999999999999999').plus('100000123.123123123123').result()
