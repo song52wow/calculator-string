@@ -301,6 +301,3 @@ export class Calculator {
     return this.num1
   }
 }
-
-// 999993.68199948192395751776451645669
-new Calculator('999999999999999').plus('100000123.123123123123').result()
