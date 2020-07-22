@@ -1,6 +1,6 @@
 {
   "name": "calculator-string",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Numerical calculation of String type(String类型的数值计算)",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
