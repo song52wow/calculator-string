@@ -25,6 +25,10 @@ describe('int x int ', () => {
     expect(new Calculator('1234').multiply('1234').result()).toBe('1522756')
   })
 
+  // it('123456 x 123456789123456789 = 152345677626', () => {
+  //   expect(new Calculator('123456').multiply('123456789123456789').result()).toBe('152345677626')
+  // })
+
   it('1234567891 x 9876543219 = 12193263132251181129', () => {
     expect(new Calculator('1234567891').multiply('9876543219').result()).toBe('12193263132251181129')
   })
@@ -35,6 +39,14 @@ describe('int x int ', () => {
 
   it('123456789 x 123456789 = 15241578750190520', () => {
     expect(new Calculator('123456789').multiply('123456789').result()).toBe('15241578750190521')
+  })
+
+  it('12332212 x 1000000000000000000 = 12332212000000000000000000', () => {
+    expect(new Calculator('12332212').multiply(Math.pow(10, 18).toString()).result()).toBe('12332212000000000000000000')
+  })
+
+  it('1233.2212 x 1000000000000000000 = 1233221200000000000000', () => {
+    expect(new Calculator('1233.2212').multiply(Math.pow(10, 18).toString()).result()).toBe('1233221200000000000000')
   })
 })
 

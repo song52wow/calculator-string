@@ -68,38 +68,44 @@ export class Calculator {
 
   /** 相乘 */
   multiply (num2: string) {
-    // 叠加小数位长度
-    this.decimalLen += this.getDecimalLength(num2)
+    if (/^1[0]+$/.test(num2)) {
+      this.decimalLen = -(num2.length - 1)
 
-    const num1IntStr = this.num1.split('.').join('')
-    const num2IntStr = num2.split('.').join('')
+      this.num1 = this.pointPosition(this.num1)
+    } else {
+      // 叠加小数位长度
+      this.decimalLen += this.getDecimalLength(num2)
 
-    const num1Segment = this.segment(num1IntStr)
-    const num2Segment = this.segment(num2IntStr)
+      const num1IntStr = this.num1.split('.').join('')
+      const num2IntStr = num2.split('.').join('')
 
-    let carry = '0'
+      const num1Segment = this.segment(num1IntStr)
+      const num2Segment = this.segment(num2IntStr)
 
-    for (let iLen = num1Segment.length, i = iLen - 1, iResult = ''; i >= 0; i--) {
-      for (let jLen = num2Segment.length, j = jLen - 1, jNumLen = 0, jResultArr = [], jResult = ''; j >= 0; j--) {
-        jResult = (Number.parseInt(num1Segment[i]) * Number.parseInt(num2Segment[j])).toString()
+      let carry = '0'
 
-        jResultArr.unshift(jResult + ''.padEnd(jNumLen, '0'))
+      for (let iLen = num1Segment.length, i = iLen - 1, iResult = ''; i >= 0; i--) {
+        for (let jLen = num2Segment.length, j = jLen - 1, jNumLen = 0, jResultArr = [], jResult = ''; j >= 0; j--) {
+          jResult = (Number.parseInt(num1Segment[i]) * Number.parseInt(num2Segment[j])).toString()
 
-        if (j > 0) {
-          jNumLen += num2Segment[j].length
+          jResultArr.unshift(jResult + ''.padEnd(jNumLen, '0'))
+
+          if (j > 0) {
+            jNumLen += num2Segment[j].length
+          }
+
+          if (j === 0) {
+            jResult = jResultArr.reduce((pre, cur) => (Number.parseInt(pre) + Number.parseInt(cur)).toString(), carry)
+
+            iResult = jResult.substr(i > 0 ? jResult.length - num1Segment[i].length : 0) + iResult
+
+            carry = jResult.substr(0, jResult.length - num1Segment[i].length) || '0'
+          }
         }
 
-        if (j === 0) {
-          jResult = jResultArr.reduce((pre, cur) => (Number.parseInt(pre) + Number.parseInt(cur)).toString(), carry)
-
-          iResult = jResult.substr(i > 0 ? jResult.length - num1Segment[i].length : 0) + iResult
-
-          carry = jResult.substr(0, jResult.length - num1Segment[i].length) || '0'
+        if (i === 0) {
+          this.num1 = this.pointPosition(iResult)
         }
-      }
-
-      if (i === 0) {
-        this.num1 = this.pointPosition(iResult)
       }
     }
 
